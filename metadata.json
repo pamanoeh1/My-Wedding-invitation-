@@ -1,0 +1,6 @@
+{
+  "name": "Undangan Pernikahan Digital Elegan",
+  "description": "Aplikasi Web Undangan Pernikahan Digital modern, mewah, dan responsif dengan fitur audio, RSVP, countdown, peta, galeri, dan amplop digital.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
