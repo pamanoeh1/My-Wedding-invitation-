@@ -1,0 +1,42 @@
+[
+  {
+    "id": "wish-1793466319889",
+    "name": "dr. Amanda & Rekan",
+    "relationship": "Rekan Kerja",
+    "attendance": "hadir",
+    "message": "Selamat berbahagia Arya dan Nabila! Semoga selalu diberkahi kebahagiaan.",
+    "createdAt": "Baru saja"
+  },
+  {
+    "id": "wish-1",
+    "name": "Keluarga Besar Bpk. Prof. Susanto",
+    "relationship": "Keluarga",
+    "attendance": "hadir",
+    "message": "Barakallahu lakuma wa baraka alaikuma wa jama'a bainakuma fii khoir. Selamat menempuh hidup baru untuk ananda Arya dan Nabila. Semoga senantiasa sakinah, mawaddah, warahmah.",
+    "createdAt": "Baru saja"
+  },
+  {
+    "id": "wish-2",
+    "name": "Dimas Anggara, S.Kom & Istri",
+    "relationship": "Sahabat",
+    "attendance": "hadir",
+    "message": "Happy Wedding sahabat perjuangan Arya! Akhirnya berlabuh ke pelaminan bersama dokter Nabila yang anggun. Doa terbaik untuk kalian berdua, lancar sampai hari H!",
+    "createdAt": "2 jam yang lalu"
+  },
+  {
+    "id": "wish-3",
+    "name": "dr. Farah Maulida & Rekan Residen",
+    "relationship": "Rekan Kerja",
+    "attendance": "hadir",
+    "message": "Selamat ya Nabila cantik! Senang banget melihat kalian berdua bersatu. Semoga menjadi keluarga penuh berkah dan saling melengkapi seumur hidup.",
+    "createdAt": "5 jam yang lalu"
+  },
+  {
+    "id": "wish-4",
+    "name": "Ahmad Fauzi & Keluarga",
+    "relationship": "Teman Kuliah",
+    "attendance": "ragu",
+    "message": "Selamat Arya dan Nabila! Mohon maaf bila belum pasti bisa hadir karena bertepatan dengan dinas ke luar kota, namun doa tulus kami selalu menyertai kalian.",
+    "createdAt": "1 hari yang lalu"
+  }
+]

@@ -1,46 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Send, CheckCircle2, XCircle, HelpCircle, Users, MessageSquareHeart, HeartHandshake } from 'lucide-react';
-import { GuestWish, validateRsvp } from '../utils/wedding';
+import { GuestWish, validateRsvp, DEFAULT_WEDDING_WISHES, fetchServerWishes, postServerWish } from '../utils/wedding';
 
 interface RsvpAndGuestbookProps {
   guestNameDefault?: string;
   onShowToast: (msg: string) => void;
 }
 
-const DEFAULT_WISHES: GuestWish[] = [
-  {
-    id: 'wish-1',
-    name: 'Keluarga Besar Bpk. Prof. Susanto',
-    relationship: 'Keluarga',
-    attendance: 'hadir',
-    message: 'Barakallahu lakuma wa baraka alaikuma wa jama\'a bainakuma fii khoir. Selamat menempuh hidup baru untuk ananda Arya dan Nabila. Semoga senantiasa sakinah, mawaddah, warahmah.',
-    createdAt: 'Baru saja',
-  },
-  {
-    id: 'wish-2',
-    name: 'Dimas Anggara, S.Kom & Istri',
-    relationship: 'Sahabat',
-    attendance: 'hadir',
-    message: 'Happy Wedding sahabat perjuangan Arya! Akhirnya berlabuh ke pelaminan bersama dokter Nabila yang anggun. Doa terbaik untuk kalian berdua, lancar sampai hari H!',
-    createdAt: '2 jam yang lalu',
-  },
-  {
-    id: 'wish-3',
-    name: 'dr. Farah Maulida & Rekan Residen',
-    relationship: 'Rekan Kerja',
-    attendance: 'hadir',
-    message: 'Selamat ya Nabila cantik! Senang banget melihat kalian berdua bersatu. Semoga menjadi keluarga penuh berkah dan saling melengkapi seumur hidup.',
-    createdAt: '5 jam yang lalu',
-  },
-  {
-    id: 'wish-4',
-    name: 'Ahmad Fauzi & Keluarga',
-    relationship: 'Teman Kuliah',
-    attendance: 'ragu',
-    message: 'Selamat Arya dan Nabila! Mohon maaf bila belum pasti bisa hadir karena bertepatan dengan dinas ke luar kota, namun doa tulus kami selalu menyertai kalian.',
-    createdAt: '1 hari yang lalu',
-  },
-];
+const DEFAULT_WISHES: GuestWish[] = DEFAULT_WEDDING_WISHES;
 
 const STORAGE_KEY = 'wedding_wishes_v1';
 
@@ -69,6 +36,15 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch latest persistent wishes from server on mount
+  useEffect(() => {
+    fetchServerWishes().then((serverWishes) => {
+      if (serverWishes && serverWishes.length > 0) {
+        setWishes(serverWishes);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (guestNameDefault && guestNameDefault !== 'Tamu Undangan' && !name) {
@@ -116,12 +92,19 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
       createdAt: 'Baru saja',
     };
 
-    setTimeout(() => {
-      setWishes((prev) => [newWish, ...prev]);
+    // Save locally immediately
+    setWishes((prev) => [newWish, ...prev]);
+
+    // Persist to server
+    postServerWish(newWish).then((persisted) => {
+      if (persisted) {
+        setWishes((prev) => [persisted, ...prev.filter((w) => w.id !== newWish.id)]);
+      }
+    }).finally(() => {
       setIsSubmitting(false);
       setMessage('');
       onShowToast('Terima kasih! Konfirmasi kehadiran & doa Anda berhasil dikirim.');
-    }, 300);
+    });
   };
 
   return (

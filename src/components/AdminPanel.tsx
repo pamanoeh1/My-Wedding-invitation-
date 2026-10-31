@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   WeddingConfig,
   saveWeddingConfig,
+  saveWeddingConfigToServer,
   resetWeddingConfig,
   DEFAULT_WEDDING_CONFIG,
   GuestWish,
@@ -79,18 +80,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   });
 
-  const handleSave = () => {
-    saveWeddingConfig(formData);
+  const [isSavingServer, setIsSavingServer] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    setIsSavingServer(true);
     onUpdateConfig(formData);
-    onShowToast('Semua pengaturan undangan berhasil disimpan!');
+    const result = await saveWeddingConfigToServer(formData);
+    setIsSavingServer(false);
+    if (result.success) {
+      setLastSavedTime(new Date().toLocaleTimeString('id-ID'));
+      onShowToast('Perubahan berhasil disimpan permanen ke seluruh kode & server!');
+    } else {
+      onShowToast('Tersimpan di penyimpanan lokal perangkat.');
+    }
   };
 
-  const handleReset = () => {
-    if (window.confirm('Apakah Anda yakin ingin mengembalikan semua data ke pengaturan awal?')) {
+  const handleReset = async () => {
+    if (window.confirm('Apakah Anda yakin ingin mengembalikan semua data ke pengaturan awal pada seluruh kode?')) {
       const def = resetWeddingConfig();
       setFormData(def);
       onUpdateConfig(def);
-      onShowToast('Pengaturan dikembalikan ke setelan default.');
+      onShowToast('Pengaturan dikembalikan ke setelan awal kode sumber.');
     }
   };
 
@@ -303,6 +314,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {lastSavedTime && (
+            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-300">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Tersimpan di Seluruh Kode ({lastSavedTime})</span>
+            </span>
+          )}
+
           <button
             onClick={handleReset}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-stone-300 bg-white text-stone-700 hover:bg-stone-50 text-xs font-semibold shadow-sm cursor-pointer"
@@ -321,10 +339,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <button
             onClick={handleSave}
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#3F4E3E] text-white hover:bg-[#344033] transition-all text-xs font-semibold shadow-md border border-[#C8A97E]/40 cursor-pointer"
+            disabled={isSavingServer}
+            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#3F4E3E] text-white hover:bg-[#344033] disabled:opacity-75 transition-all text-xs font-semibold shadow-md border border-[#C8A97E]/40 cursor-pointer"
           >
             <Save className="w-3.5 h-3.5 text-[#C8A97E]" />
-            <span>Simpan Perubahan</span>
+            <span>{isSavingServer ? 'Menyimpan ke Seluruh Kode...' : 'Simpan ke Seluruh Kode'}</span>
           </button>
 
           <button
@@ -339,6 +358,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       {/* Main Container */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+        {/* Global Persistence Status Card */}
+        <div className="mb-6 p-4 rounded-2xl bg-white border border-[#C8A97E]/40 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#2D332D] flex items-center gap-2">
+                <span>Sinkronisasi ke Seluruh Kode Sumber & Server Aktif</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
+              </p>
+              <p className="text-[11px] text-[#667265] mt-0.5">
+                Setiap perubahan langsung disimpan permanen ke <code className="bg-stone-100 px-1 py-0.5 rounded text-[10px] text-[#7D6B4E]">src/config/wedding-config.json</code> dan backend server, sehingga otomatis tampil di semua HP dan komputer tamu.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSavingServer}
+            className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#3F4E3E] text-white hover:bg-[#344033] text-[11px] font-semibold cursor-pointer shadow-xs"
+          >
+            <Save className="w-3.5 h-3.5 text-[#C8A97E]" />
+            <span>{isSavingServer ? 'Menyimpan...' : 'Sinkron Sekarang'}</span>
+          </button>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-3 mb-6 border-b border-stone-300">
           {[

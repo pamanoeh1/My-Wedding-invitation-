@@ -1,0 +1,70 @@
+================================================================================
+PANDUAN LENGKAP UPLOAD WEBSITE UNDANGAN PERNIKAHAN KE WEB HOSTING
+================================================================================
+
+Website undangan pernikahan digital ini adalah berkas Static Web (HTML, CSS, JS)
+yang 100% mandiri, responsif, cepat, dan siap diunggah ke semua jenis hosting
+(cPanel, Hostinger, Niagahoster, DomaiNesia, Rumahweb, IDwebhost, Netlify, Vercel,
+GitHub Pages, dll).
+
+--------------------------------------------------------------------------------
+OPSI 1: UPLOAD KE CPANEL / SHARED HOSTING (Paling Umum)
+--------------------------------------------------------------------------------
+1. Masuk ke cPanel akun hosting Anda (misal: domainanda.com/cpanel).
+2. Buka menu "File Manager".
+3. Masuk ke folder "public_html" (atau folder subdomain Anda).
+4. Klik tombol "Upload" di menu atas.
+5. Unggah berkas "undangan-pernikahan-hosting.zip".
+6. Setelah selesai diunggah (100%), klik kanan pada berkas zip tersebut,
+   lalu pilih "Extract" / "Ekstrak di sini".
+7. Pastikan file "index.html" dan folder "assets" berada langsung di dalam
+   folder public_html (bukan di dalam subfolder ekstraksi).
+8. Selesai! Buka domain Anda di browser: https://domainanda.com
+
+
+--------------------------------------------------------------------------------
+OPSI 2: UPLOAD KE HOSTINGER (hPanel)
+--------------------------------------------------------------------------------
+1. Masuk ke dashboard Hostinger -> Web Hosting -> Kelola.
+2. Buka menu "File Manager".
+3. Masuk ke folder "public_html".
+4. Klik tombol "Unggah" (Upload) -> pilih berkas "undangan-pernikahan-hosting.zip".
+5. Klik kanan pada file zip -> pilih "Ekstrak" (Extract).
+6. Selesai! Website langsung aktif di domain Anda.
+
+
+--------------------------------------------------------------------------------
+OPSI 3: UPLOAD KE HOSTING GRATIS (Netlify / Vercel)
+--------------------------------------------------------------------------------
+Cara termudah tanpa sewa server:
+1. Buka https://app.netlify.com/drop
+2. Drag & drop folder hasil ekstrak zip ini ke layar browser Netlify.
+3. Dalam 5 detik, website langsung online dengan link HTTPS gratis!
+   Anda juga bisa menghubungkan domain kustom sendiri secara gratis.
+
+
+--------------------------------------------------------------------------------
+CARA PENGGUNAAN FITUR:
+--------------------------------------------------------------------------------
+1. MEMBAGIKAN UNDANGAN KE TAMU DENGAN NAMA KHUSUS:
+   Tambahkan parameter "?to=Nama+Tamu" di belakang URL domain Anda.
+   Contoh:
+   - https://domainanda.com/?to=Bpk.+Ir.+Hendra+Gunawan
+   - https://domainanda.com/?to=dr.+Amanda+%26+Partner
+   - https://domainanda.com/?to=Sahabat+Keluarga+Bambang
+
+2. MEMBUKA PANEL EDIT PENGELOLA (ADMIN):
+   Akses URL dengan parameter rahasia:
+   https://domainanda.com/?salam2408&risa1211
+   
+   Akun Default Admin:
+   - Username: admin
+   - Password: wedding2026
+   (Username & password dapat diubah langsung dari dalam panel edit).
+
+3. BERKAS STANDALONE HTML (SINGLE-FILE):
+   File "undangan-pernikahan-digital.html" adalah versi 1 berkas tunggal terpadu
+   yang dapat dibuka langsung di laptop/HP tanpa internet sekalipun.
+
+Semoga acara pernikahan berjalan lancar, berkah, dan penuh kebahagiaan!
+================================================================================

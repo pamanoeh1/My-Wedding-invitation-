@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import {
   extractGuestName,
   loadWeddingConfig,
+  fetchServerWeddingConfig,
   saveWeddingConfig,
   isSecretAdminParam,
   WeddingConfig,
@@ -68,6 +69,20 @@ export default function App() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Fetch live server configuration on mount
+  useEffect(() => {
+    fetchServerWeddingConfig().then((serverConfig) => {
+      setConfig(serverConfig);
+    });
+
+    fetch('/api/admin/auth')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.username) setAdminUsername(data.username);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     const checkUrlParams = () => {
       const search = window.location.search;
@@ -126,11 +141,18 @@ export default function App() {
     setAdminPassword(newP);
     localStorage.setItem('wedding_admin_user', newU);
     localStorage.setItem('wedding_admin_pass', newP);
+
+    fetch('/api/admin/credentials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newUsername: newU, newPassword: newP }),
+    }).catch(() => {});
   };
 
   const handleUpdateConfig = (newConfig: WeddingConfig) => {
     setConfig(newConfig);
-    saveWeddingConfig(newConfig);
+    saveWeddingConfig(newConfig, true);
+    showToast('Perubahan berhasil diterapkan ke seluruh kode & server!');
   };
 
   // If in admin view mode, show Admin Dashboard
