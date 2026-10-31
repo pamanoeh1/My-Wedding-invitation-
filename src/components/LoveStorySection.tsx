@@ -8,8 +8,14 @@ interface StoryMilestone {
   icon: React.ReactNode;
 }
 
-export const LoveStorySection: React.FC = () => {
-  const milestones: StoryMilestone[] = [
+import { WeddingConfig } from '../utils/wedding';
+
+interface LoveStorySectionProps {
+  milestones?: WeddingConfig['milestones'];
+}
+
+export const LoveStorySection: React.FC<LoveStorySectionProps> = ({ milestones: customMilestones }) => {
+  const defaultMilestones: StoryMilestone[] = [
     {
       year: '2021',
       title: 'Pertemuan Pertama di Kampus',
@@ -39,6 +45,20 @@ export const LoveStorySection: React.FC = () => {
       icon: <Award className="w-5 h-5 text-[#C8A97E]" />,
     },
   ];
+
+  const icons = [
+    <Compass className="w-5 h-5 text-[#C8A97E]" />,
+    <Heart className="w-5 h-5 text-[#C8A97E] fill-[#C8A97E]/30" />,
+    <Sparkles className="w-5 h-5 text-[#C8A97E]" />,
+    <Award className="w-5 h-5 text-[#C8A97E]" />,
+  ];
+
+  const milestones: StoryMilestone[] = customMilestones
+    ? customMilestones.map((m, idx) => ({
+        ...m,
+        icon: icons[idx % icons.length],
+      }))
+    : defaultMilestones;
 
   return (
     <section className="py-20 px-4 sm:px-6 bg-[#FBF9F5] relative overflow-hidden" id="story">

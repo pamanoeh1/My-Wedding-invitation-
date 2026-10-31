@@ -4,16 +4,20 @@ import { Music, Volume2, VolumeX, Disc3 } from 'lucide-react';
 interface AudioPlayerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
+  audioUrl?: string;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ isPlaying, onTogglePlay }) => {
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
+  isPlaying,
+  onTogglePlay,
+  audioUrl = 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=wedding-love-18342.mp3',
+}) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const synthIntervalRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const [useSynth, setUseSynth] = useState(false);
 
-  // Royalty-free acoustic wedding track stream
-  const AUDIO_SRC = 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=wedding-love-18342.mp3';
+  const AUDIO_SRC = audioUrl;
 
   // Fallback Web Audio API synthesizer in case external CDN is blocked
   const playGentleMelodyNote = (frequency: number, duration = 1.2) => {

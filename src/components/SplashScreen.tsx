@@ -4,9 +4,16 @@ import { MailOpen, Sparkles } from 'lucide-react';
 interface SplashScreenProps {
   guestName: string;
   onOpen: () => void;
+  groomName?: string;
+  brideName?: string;
 }
 
-export const SplashScreen: React.FC<SplashScreenProps> = ({ guestName, onOpen }) => {
+export const SplashScreen: React.FC<SplashScreenProps> = ({
+  guestName,
+  onOpen,
+  groomName = 'Arya',
+  brideName = 'Nabila',
+}) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#FBF9F5] overflow-hidden transition-all duration-700">
       {/* Background soft botanical watermark / gradient */}
@@ -33,7 +40,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ guestName, onOpen })
         </p>
 
         <h1 className="text-4xl sm:text-5xl font-serif font-bold text-[#2D332D] tracking-wide my-3">
-          Arya <span className="font-script text-[#C8A97E] text-5xl sm:text-6xl font-normal">&</span> Nabila
+          {groomName} <span className="font-script text-[#C8A97E] text-5xl sm:text-6xl font-normal">&</span> {brideName}
         </h1>
 
         <div className="w-16 h-[2px] bg-gradient-to-r from-transparent via-[#C8A97E] to-transparent mx-auto my-5" />

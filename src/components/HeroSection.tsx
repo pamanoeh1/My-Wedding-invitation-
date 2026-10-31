@@ -4,9 +4,23 @@ import { calculateCountdown, CountdownResult } from '../utils/wedding';
 
 interface HeroSectionProps {
   weddingDateIso: string;
+  groomName?: string;
+  brideName?: string;
+  dateDisplay?: string;
+  heroPhotoUrl?: string;
+  heroSubtitle?: string;
+  showCountdown?: boolean;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ weddingDateIso }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  weddingDateIso,
+  groomName = 'Arya',
+  brideName = 'Nabila',
+  dateDisplay = 'Sabtu, 12 Desember 2026 • Jakarta, Indonesia',
+  heroPhotoUrl = 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80',
+  heroSubtitle = 'The Wedding Celebration',
+  showCountdown = true,
+}) => {
   const [countdown, setCountdown] = useState<CountdownResult>(() =>
     calculateCountdown(weddingDateIso)
   );
@@ -30,27 +44,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ weddingDateIso }) => {
         {/* Top greeting badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 border border-[#C8A97E]/30 text-xs tracking-[0.25em] text-[#606F5D] uppercase font-semibold mb-6 shadow-sm">
           <Heart className="w-3.5 h-3.5 text-[#C8A97E] fill-[#C8A97E]" />
-          <span>The Wedding Celebration</span>
+          <span>{heroSubtitle}</span>
           <Heart className="w-3.5 h-3.5 text-[#C8A97E] fill-[#C8A97E]" />
         </div>
 
         {/* Big Couple Name */}
         <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif font-bold text-[#2D332D] tracking-tight mb-2">
-          Arya <span className="font-script text-[#C8A97E] text-6xl sm:text-8xl md:text-9xl font-normal block sm:inline">&</span> Nabila
+          {groomName} <span className="font-script text-[#C8A97E] text-6xl sm:text-8xl md:text-9xl font-normal block sm:inline">&</span> {brideName}
         </h1>
 
         {/* Date string */}
         <div className="flex items-center gap-2 text-sm sm:text-base text-[#606F5D] font-medium tracking-wide my-4">
           <Calendar className="w-4 h-4 text-[#C8A97E]" />
-          <span>Sabtu, 12 Desember 2026 • Jakarta, Indonesia</span>
+          <span>{dateDisplay}</span>
         </div>
 
         {/* Couple Hero Photo Frame */}
         <div className="relative my-8 p-3 bg-white rounded-3xl shadow-2xl border border-[#C8A97E]/35 max-w-sm sm:max-w-md w-full group">
           <div className="relative overflow-hidden rounded-2xl aspect-[4/5] bg-stone-100">
             <img
-              src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80"
-              alt="Arya & Nabila"
+              src={heroPhotoUrl}
+              alt={`${groomName} & ${brideName}`}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
             />
@@ -65,34 +79,36 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ weddingDateIso }) => {
           <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-2 border-r-2 border-[#C8A97E]" />
         </div>
 
-        {/* Countdown Timer Block */}
-        <div className="w-full max-w-lg mt-4">
-          <div className="flex items-center justify-center gap-2 mb-3 text-xs tracking-widest text-[#7D6B4E] uppercase font-semibold">
-            <Clock className="w-3.5 h-3.5 text-[#C8A97E]" />
-            <span>Menghitung Hari Menuju Hari Bahagia</span>
-          </div>
+        {/* Countdown Timer Block (Optional toggle) */}
+        {showCountdown && (
+          <div className="w-full max-w-lg mt-4">
+            <div className="flex items-center justify-center gap-2 mb-3 text-xs tracking-widest text-[#7D6B4E] uppercase font-semibold">
+              <Clock className="w-3.5 h-3.5 text-[#C8A97E]" />
+              <span>Menghitung Hari Menuju Hari Bahagia</span>
+            </div>
 
-          <div className="grid grid-cols-4 gap-2 sm:gap-4">
-            {[
-              { label: 'Hari', value: countdown.days },
-              { label: 'Jam', value: countdown.hours },
-              { label: 'Menit', value: countdown.minutes },
-              { label: 'Detik', value: countdown.seconds },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl glass-card bg-white/80 shadow-md border border-[#C8A97E]/30"
-              >
-                <span className="text-2xl sm:text-4xl font-serif font-bold text-[#3F4E3E]">
-                  {String(item.value).padStart(2, '0')}
-                </span>
-                <span className="text-[11px] sm:text-xs text-[#7A8678] uppercase tracking-wider font-medium mt-1">
-                  {item.label}
-                </span>
-              </div>
-            ))}
+            <div className="grid grid-cols-4 gap-2 sm:gap-4">
+              {[
+                { label: 'Hari', value: countdown.days },
+                { label: 'Jam', value: countdown.hours },
+                { label: 'Menit', value: countdown.minutes },
+                { label: 'Detik', value: countdown.seconds },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl glass-card bg-white/80 shadow-md border border-[#C8A97E]/30"
+                >
+                  <span className="text-2xl sm:text-4xl font-serif font-bold text-[#3F4E3E]">
+                    {String(item.value).padStart(2, '0')}
+                  </span>
+                  <span className="text-[11px] sm:text-xs text-[#7A8678] uppercase tracking-wider font-medium mt-1">
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Down indicator */}

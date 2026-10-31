@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+/* KFGQPC Uthman Taha Naskh Regular Font */
+@font-face {
+  font-family: 'KFGQPC Uthman Taha Naskh Regular';
+  src: local('KFGQPC Uthman Taha Naskh Regular'),
+       local('KFGQPC Uthman Taha Naskh'),
+       url('https://cdn.jsdelivr.net/gh/mustafa0x/qpc-fonts@master/various-woff2/UthmanTN1%20Ver10.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* kfgqpc-uthmanic-script-hafs-regular Font */
+@font-face {
+  font-family: 'kfgqpc-uthmanic-script-hafs-regular';
+  src: local('kfgqpc-uthmanic-script-hafs-regular'),
+       local('KFGQPC Uthmanic Script HAFS Regular'),
+       local('KFGQPC Uthmanic Script HAFS'),
+       url('https://cdn.jsdelivr.net/gh/mustafa0x/qpc-fonts@master/various-woff2/UthmanicHafs1%20Ver09.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --font-serif: 'Cormorant Garamond', Georgia, serif;
@@ -18,6 +41,14 @@
 
   .font-script {
     font-family: var(--font-script);
+  }
+
+  .font-quran-uthman {
+    font-family: 'KFGQPC Uthman Taha Naskh Regular', 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
+  }
+
+  .font-quran-hafs {
+    font-family: 'kfgqpc-uthmanic-script-hafs-regular', 'KFGQPC Uthman Taha Naskh Regular', 'Amiri', 'Traditional Arabic', serif;
   }
 }
 

@@ -3,9 +3,15 @@ import { Heart, FileCode, Download, Check, Sparkles } from 'lucide-react';
 
 interface FooterSectionProps {
   onShowToast: (msg: string) => void;
+  showDownload?: boolean;
+  onOpenSecretAdmin?: () => void;
 }
 
-export const FooterSection: React.FC<FooterSectionProps> = ({ onShowToast }) => {
+export const FooterSection: React.FC<FooterSectionProps> = ({
+  onShowToast,
+  showDownload = true,
+  onOpenSecretAdmin,
+}) => {
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadStandalone = () => {
@@ -48,27 +54,29 @@ export const FooterSection: React.FC<FooterSectionProps> = ({ onShowToast }) => 
           </p>
         </div>
 
-        {/* Action Button: Unduh Standalone Single-file HTML */}
-        <div className="pt-4">
-          <button
-            onClick={handleDownloadStandalone}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#C8A97E] hover:text-[#2D332D] text-xs font-semibold text-[#EAF0E8] border border-[#C8A97E]/40 transition-all duration-300 cursor-pointer shadow-lg"
-          >
-            {downloading ? (
-              <>
-                <Check className="w-4 h-4 text-emerald-400" />
-                <span>Mengunduh Berkas...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 text-[#C8A97E]" />
-                <span>Unduh Berkas Standalone HTML (Single-File)</span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* Action Button: Unduh Standalone Single-file HTML (Controllable via Features) */}
+        {showDownload && (
+          <div className="pt-4">
+            <button
+              onClick={handleDownloadStandalone}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#C8A97E] hover:text-[#2D332D] text-xs font-semibold text-[#EAF0E8] border border-[#C8A97E]/40 transition-all duration-300 cursor-pointer shadow-lg"
+            >
+              {downloading ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Mengunduh Berkas...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 text-[#C8A97E]" />
+                  <span>Unduh Berkas Standalone HTML (Single-File)</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
-        {/* Branding & Watermark */}
+        {/* Branding, Watermark & Secret Admin Link */}
         <div className="pt-10 border-t border-white/10 text-[11px] text-stone-400 flex flex-col sm:flex-row items-center justify-center gap-2">
           <span>Digital Wedding Invitation &bull; Crafted with</span>
           <Heart className="w-3.5 h-3.5 text-[#C8A97E] fill-[#C8A97E] inline" />
