@@ -32,13 +32,16 @@ test('validateAdminLogin validates credentials accurately', () => {
   assert.equal(validateAdminLogin('', ''), false);
 });
 
-test('DEFAULT_WEDDING_CONFIG contains dynamic features, events, and bank accounts', () => {
+test('DEFAULT_WEDDING_CONFIG contains dynamic features, events, bank accounts, and QRIS', () => {
   assert.equal(DEFAULT_WEDDING_CONFIG.features.splashScreen, true);
   assert.equal(DEFAULT_WEDDING_CONFIG.features.audioPlayer, true);
   assert.ok(DEFAULT_WEDDING_CONFIG.event.eventsList.length >= 2);
   assert.ok(DEFAULT_WEDDING_CONFIG.gifts.bankAccounts.length >= 3);
   assert.ok(DEFAULT_WEDDING_CONFIG.gallery.length >= 6);
   assert.ok(DEFAULT_WEDDING_CONFIG.protocols.length >= 4);
+  assert.equal(DEFAULT_WEDDING_CONFIG.gifts.qris.isActive, true);
+  assert.equal(DEFAULT_WEDDING_CONFIG.gifts.qris.merchantName, 'Arya & Nabila Wedding');
+  assert.equal(DEFAULT_WEDDING_CONFIG.gifts.qris.nmid, 'ID1020261212891');
 });
 
 test('extractGuestName extracts guest name from URL query params correctly', () => {

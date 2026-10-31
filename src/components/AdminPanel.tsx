@@ -3,6 +3,7 @@ import {
   WeddingConfig,
   saveWeddingConfig,
   resetWeddingConfig,
+  DEFAULT_WEDDING_CONFIG,
   GuestWish,
   WeddingEventItem,
   BankAccountItem,
@@ -32,6 +33,7 @@ import {
   ShieldCheck,
   Link as LinkIcon,
   Music,
+  QrCode,
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -1155,6 +1157,257 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* EDIT QRIS PEMBAYARAN DIGITAL */}
+            <div className="p-6 rounded-3xl bg-white shadow-md border border-[#C8A97E]/30 space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#F5ECE0] text-[#7D6B4E] flex items-center justify-center border border-[#C8A97E]/30">
+                    <QrCode className="w-5 h-5 text-[#C8A97E]" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-lg text-[#2D332D]">
+                      Edit QRIS Pembayaran Digital
+                    </h3>
+                    <p className="text-xs text-[#7A8678]">
+                      Sesuaikan nama merchant, kode NMID, petunjuk, dan unggah barcode/gambar QRIS resmi.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris;
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...cur,
+                            isActive: !cur.isActive,
+                          },
+                        },
+                      });
+                    }}
+                    className={`text-xs px-3.5 py-1.5 rounded-full font-semibold cursor-pointer transition ${
+                      (formData.gifts?.qris?.isActive ?? true)
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-stone-200 text-stone-600 border border-stone-300'
+                    }`}
+                  >
+                    {(formData.gifts?.qris?.isActive ?? true) ? 'QRIS Aktif' : 'QRIS Dinonaktifkan'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: { ...DEFAULT_WEDDING_CONFIG.gifts.qris },
+                        },
+                      });
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-full border border-stone-300 text-stone-600 hover:bg-stone-100 transition cursor-pointer"
+                    title="Kembalikan QRIS ke Pengaturan Bawaan"
+                  >
+                    Reset Bawaan
+                  </button>
+                </div>
+              </div>
+
+              {/* QRIS Input Grid */}
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#556054] mb-1">
+                    Judul Fitur QRIS
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gifts?.qris?.title ?? 'QRIS Pembayaran Digital'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                            title: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="Contoh: QRIS Pembayaran Digital"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 bg-[#FBF9F5] outline-none focus:border-[#C8A97E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#556054] mb-1">
+                    Atas Nama / Nama Merchant
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gifts?.qris?.merchantName ?? 'Arya & Nabila Wedding'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                            merchantName: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="Contoh: Arya & Nabila Wedding"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 bg-[#FBF9F5] outline-none focus:border-[#C8A97E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#556054] mb-1">
+                    Kode NMID / Merchant ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.gifts?.qris?.nmid ?? 'ID1020261212891'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                            nmid: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="Contoh: ID1020261212891"
+                    className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-stone-300 bg-[#FBF9F5] outline-none focus:border-[#C8A97E]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#556054] mb-1">
+                    Deskripsi / Daftar Aplikasi Didukung
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={
+                      formData.gifts?.qris?.description ??
+                      'Mendukung BCA Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja, dan seluruh aplikasi perbankan berbasis QRIS.'
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                            description: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="Tuliskan keterangan e-wallet dan perbankan yang didukung"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 bg-[#FBF9F5] outline-none focus:border-[#C8A97E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#556054] mb-1">
+                    Petunjuk Scan QRIS Bagi Tamu
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={
+                      formData.gifts?.qris?.instruction ??
+                      'Buka aplikasi m-Banking atau e-Wallet pilihan Anda, lalu scan kode QRIS di atas.'
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gifts: {
+                          ...formData.gifts,
+                          qris: {
+                            ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                            instruction: e.target.value,
+                          },
+                        },
+                      })
+                    }
+                    placeholder="Petunjuk singkat proses transfer"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 bg-[#FBF9F5] outline-none focus:border-[#C8A97E]"
+                  />
+                </div>
+              </div>
+
+              {/* Media Upload for QR Code Image */}
+              <MediaInput
+                label="Unggah Gambar / Foto Barcode QRIS Resmi (Upload File Lokal / URL)"
+                value={formData.gifts?.qris?.qrImageUrl || ''}
+                onChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    gifts: {
+                      ...formData.gifts,
+                      qris: {
+                        ...(formData.gifts?.qris || DEFAULT_WEDDING_CONFIG.gifts.qris),
+                        qrImageUrl: val,
+                      },
+                    },
+                  })
+                }
+                helperText="Unggah tangkapan layar (screenshot) kode QRIS resmi rekening Anda (BCA, Mandiri, BRI, BSI, GoPay, OVO, Dana, dll). Jika dikosongkan, sistem akan menampilkan QR Code ilustratif."
+              />
+
+              {/* QRIS Live Preview Box */}
+              <div className="p-4 rounded-2xl bg-[#F8F5EE] border border-[#C8A97E]/30 flex flex-col sm:flex-row items-center gap-4">
+                <div className="shrink-0 p-3 bg-white rounded-xl border border-stone-200 shadow-sm text-center">
+                  {formData.gifts?.qris?.qrImageUrl ? (
+                    <img
+                      src={formData.gifts.qris.qrImageUrl}
+                      alt="Preview QRIS"
+                      className="w-28 h-28 object-contain rounded-lg mx-auto"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 flex flex-col items-center justify-center bg-stone-100 rounded-lg text-stone-400">
+                      <QrCode className="w-12 h-12 text-[#C8A97E] mb-1" />
+                      <span className="text-[10px] text-stone-500 font-medium">QRIS Ilustratif</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1 text-center sm:text-left flex-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <span className="text-xs font-bold text-[#2D332D]">
+                      {formData.gifts?.qris?.title || 'QRIS Pembayaran Digital'}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#EAF0E8] text-[#3F4E3E] font-semibold">
+                      NMID: {formData.gifts?.qris?.nmid || 'ID1020261212891'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-[#7D6B4E]">
+                    Atas Nama: {formData.gifts?.qris?.merchantName || 'Arya & Nabila Wedding'}
+                  </p>
+                  <p className="text-[11px] text-[#667265] line-clamp-2">
+                    {formData.gifts?.qris?.description ||
+                      'Mendukung BCA Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja, dan seluruh aplikasi perbankan berbasis QRIS.'}
+                  </p>
+                  <p className="text-[10px] text-[#7A8678] italic">
+                    Status: {(formData.gifts?.qris?.isActive ?? true) ? '✅ Tampil di Halaman Undangan' : '❌ Disembunyikan'}
+                  </p>
+                </div>
               </div>
             </div>
 

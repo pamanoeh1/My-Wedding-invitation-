@@ -37,6 +37,16 @@ export interface BankAccountItem {
   isActive: boolean;
 }
 
+export interface QrisConfig {
+  isActive: boolean;
+  title: string;
+  merchantName: string;
+  nmid: string;
+  description: string;
+  instruction: string;
+  qrImageUrl: string;
+}
+
 export interface WeddingEventItem {
   id: string;
   tag: string;
@@ -123,6 +133,7 @@ export interface WeddingConfig {
   protocols: ProtocolItem[];
   gifts: {
     bankAccounts: BankAccountItem[];
+    qris: QrisConfig;
     physicalAddress: string;
     receiverContact: string;
   };
@@ -305,6 +316,15 @@ export const DEFAULT_WEDDING_CONFIG: WeddingConfig = {
         isActive: true,
       },
     ],
+    qris: {
+      isActive: true,
+      title: 'QRIS Pembayaran Digital',
+      merchantName: 'Arya & Nabila Wedding',
+      nmid: 'ID1020261212891',
+      description: 'Mendukung BCA Mobile, GoPay, OVO, Dana, ShopeePay, LinkAja, dan seluruh aplikasi perbankan berbasis QRIS.',
+      instruction: 'Buka aplikasi m-Banking atau e-Wallet pilihan Anda, lalu scan kode QRIS di atas.',
+      qrImageUrl: '',
+    },
     physicalAddress: 'Jl. Dharmawangsa X No. 18, Kebayoran Baru, Jakarta Selatan, DKI Jakarta 12160',
     receiverContact: 'dr. Nabila / Arya Wijaya (0812-3456-7890)',
   },
@@ -387,6 +407,10 @@ export function loadWeddingConfig(): WeddingConfig {
           ...DEFAULT_WEDDING_CONFIG.gifts,
           ...(parsed.gifts || {}),
           bankAccounts: parsed.gifts?.bankAccounts || DEFAULT_WEDDING_CONFIG.gifts.bankAccounts,
+          qris: {
+            ...DEFAULT_WEDDING_CONFIG.gifts.qris,
+            ...(parsed.gifts?.qris || {}),
+          },
         },
         gallery: parsed.gallery || DEFAULT_WEDDING_CONFIG.gallery,
         protocols: parsed.protocols || DEFAULT_WEDDING_CONFIG.protocols,
