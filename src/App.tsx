@@ -78,20 +78,22 @@ export default function App() {
     fetch('/api/admin/auth')
       .then((res) => res.json())
       .then((data) => {
-        if (data.username) setAdminUsername(data.username);
+        if (data && data.username) setAdminUsername(data.username);
       })
       .catch(() => {});
   }, []);
 
+  // Listen to browser URL and navigation once on mount without re-triggering loops
   useEffect(() => {
     const checkUrlParams = () => {
+      if (typeof window === 'undefined') return;
       const search = window.location.search;
       const pathname = window.location.pathname;
       const extracted = extractGuestName(search, 'Bapak/Ibu/Sahabat Terhormat');
-      setGuestName(extracted);
+      setGuestName((prev) => (prev !== extracted ? extracted : prev));
 
       const params = new URLSearchParams(search);
-      if (params.get('autostart') === '1' || !config.features.splashScreen) {
+      if (params.get('autostart') === '1') {
         setIsOpen(true);
         setIsPlayingAudio(true);
       }
@@ -105,6 +107,13 @@ export default function App() {
     checkUrlParams();
     window.addEventListener('popstate', checkUrlParams);
     return () => window.removeEventListener('popstate', checkUrlParams);
+  }, []);
+
+  // If splashScreen feature is turned off in config, reveal main invitation automatically
+  useEffect(() => {
+    if (!config.features.splashScreen) {
+      setIsOpen(true);
+    }
   }, [config.features.splashScreen]);
 
   const handleOpenInvitation = () => {
@@ -266,6 +275,11 @@ export default function App() {
 
         {/* 9. Footer Section */}
         <FooterSection
+          groomName={config.couple.groom.name}
+          brideName={config.couple.bride.name}
+          groomFather={config.couple.groom.father}
+          brideFather={config.couple.bride.father}
+          config={config}
           onShowToast={showToast}
           showDownload={config.features.downloadStandalone}
         />

@@ -13,6 +13,9 @@ import {
   validateAdminLogin,
   isSecretAdminParam,
   DEFAULT_WEDDING_CONFIG,
+  extractFatherLastName,
+  formatFamilyAnnouncement,
+  formatWishRelativeTime,
 } from './wedding';
 
 test('isSecretAdminParam accurately detects secret admin link salam2408&risa1211', () => {
@@ -68,3 +71,63 @@ test('validateRsvp validates attendance and guest count rules', () => {
   });
   assert.equal(valid.valid, true);
 });
+
+test('extractFatherLastName extracts father family name cleanly', () => {
+  assert.equal(extractFatherLastName('Bpk. Ir. H. Bambang Wijaya'), 'Wijaya');
+  assert.equal(extractFatherLastName('Bpk. Prof. Dr. Hendra Gunawan'), 'Gunawan');
+  assert.equal(extractFatherLastName('Rahmat Santoso'), 'Santoso');
+  assert.equal(extractFatherLastName(''), '');
+});
+
+test('formatFamilyAnnouncement formats dynamic family announcement', () => {
+  const result = formatFamilyAnnouncement('Bpk. Ir. H. Bambang Wijaya', 'Bpk. Prof. Dr. Hendra Gunawan');
+  assert.equal(result, 'Beserta segenap Keluarga Besar Wijaya & Gunawan');
+
+  const custom = formatFamilyAnnouncement('Bpk. Rahmat Santoso', 'Bpk. Budi Pratama');
+  assert.equal(custom, 'Beserta segenap Keluarga Besar Santoso & Pratama');
+});
+
+test('formatWishRelativeTime displays "Baru saja" only under 5 minutes and relative time otherwise', () => {
+  const now = Date.now();
+
+  // 1 minute ago -> "Baru saja"
+  const recentWish: any = {
+    id: '1',
+    name: 'Tamu 1',
+    relationship: 'Sahabat',
+    attendance: 'hadir',
+    message: 'Selamat!',
+    createdAt: new Date(now - 60 * 1000).toISOString(),
+    timestamp: now - 60 * 1000,
+  };
+  assert.equal(formatWishRelativeTime(recentWish, now), 'Baru saja');
+
+  // 4 minutes 59 seconds ago -> "Baru saja"
+  const under5Wish: any = {
+    ...recentWish,
+    timestamp: now - 4.9 * 60 * 1000,
+  };
+  assert.equal(formatWishRelativeTime(under5Wish, now), 'Baru saja');
+
+  // 5 minutes ago -> "5 menit yang lalu" (Baru saja must be gone!)
+  const fiveMinWish: any = {
+    ...recentWish,
+    timestamp: now - 5 * 60 * 1000,
+  };
+  assert.equal(formatWishRelativeTime(fiveMinWish, now), '5 menit yang lalu');
+
+  // 12 minutes ago -> "12 menit yang lalu"
+  const twelveMinWish: any = {
+    ...recentWish,
+    timestamp: now - 12 * 60 * 1000,
+  };
+  assert.equal(formatWishRelativeTime(twelveMinWish, now), '12 menit yang lalu');
+
+  // 2 hours ago -> "2 jam yang lalu"
+  const twoHourWish: any = {
+    ...recentWish,
+    timestamp: now - 2 * 3600 * 1000,
+  };
+  assert.equal(formatWishRelativeTime(twoHourWish, now), '2 jam yang lalu');
+});
+

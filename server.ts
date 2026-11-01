@@ -55,6 +55,42 @@ function getSavedConfig(): any {
   return null;
 }
 
+function extractFatherLastName(fullName: string, fallback = ''): string {
+  if (!fullName || typeof fullName !== 'string') return fallback;
+  const withoutTitles = fullName
+    .replace(/\b(Bpk\.?|Bapak\.?|Ibu\.?|Ir\.?|Dr\.?|Drs\.?|Dra\.?|Prof\.?|H\.?|Hj\.?|S\.T\.?|S\.E\.?|S\.Kom\.?|M\.M\.?|M\.Si\.?|M\.T\.?|Ph\.D\.?)\b/gi, '')
+    .trim();
+  const words = withoutTitles.split(/\s+/).filter(Boolean);
+  if (words.length > 0) {
+    const lastWord = words[words.length - 1].replace(/^[,\.\s]+|[,\.\s]+$/g, '');
+    if (lastWord.length > 0) return lastWord;
+  }
+  return fallback;
+}
+
+function syncStandaloneHtml(config: any): void {
+  const htmlPath = path.join(PUBLIC_DIR, 'wedding-invitation-standalone.html');
+  if (!fs.existsSync(htmlPath)) return;
+  try {
+    let content = fs.readFileSync(htmlPath, 'utf-8');
+    const groomName = config?.couple?.groom?.name || 'Arya';
+    const brideName = config?.couple?.bride?.name || 'Nabila';
+    const groomFather = config?.couple?.groom?.father || 'Bpk. Ir. H. Bambang Wijaya';
+    const brideFather = config?.couple?.bride?.father || 'Bpk. Prof. Dr. Hendra Gunawan';
+    const groomFamily = extractFatherLastName(groomFather, 'Wijaya');
+    const brideFamily = extractFatherLastName(brideFather, 'Gunawan');
+
+    // Replace title
+    content = content.replace(/<title>.*?<\/title>/, `<title>The Wedding of ${groomName} & ${brideName} — Undangan Pernikahan Digital</title>`);
+    // Replace footer names
+    content = content.replace(/<h3 class="text-2xl font-serif font-bold text-white">.*?<\/h3>/, `<h3 class="text-2xl font-serif font-bold text-white">${groomName} & ${brideName}</h3>`);
+    content = content.replace(/<p class="text-xs text-stone-400 mt-1">.*?<\/p>/, `<p class="text-xs text-stone-400 mt-1">Beserta segenap Keluarga Besar ${groomFamily} & ${brideFamily}</p>`);
+    fs.writeFileSync(htmlPath, content, 'utf-8');
+  } catch (err) {
+    console.error('Failed to sync standalone HTML:', err);
+  }
+}
+
 // Write config to BOTH data/ and src/config/ so it is permanently part of the entire codebase
 function saveConfigEverywhere(config: any): void {
   const jsonString = JSON.stringify(config, null, 2);
@@ -69,6 +105,8 @@ function saveConfigEverywhere(config: any): void {
   } catch (err) {
     console.error('Failed to write src config:', err);
   }
+
+  syncStandaloneHtml(config);
 }
 
 // Read and save guest wishes
@@ -200,19 +238,58 @@ app.post('/api/wishes', (req, res) => {
     }
 
     const currentWishes = getSavedWishes();
+    const nowEpoch = Date.now();
     const newWish = {
-      id: wish.id || `wish-${Date.now()}`,
+      id: wish.id || `wish-${nowEpoch}`,
       name: String(wish.name).trim(),
       relationship: wish.relationship || 'Sahabat',
       attendance: wish.attendance || 'hadir',
       message: String(wish.message).trim(),
-      createdAt: wish.createdAt || 'Baru saja',
+      createdAt: wish.createdAt || new Date(nowEpoch).toISOString(),
+      timestamp: typeof wish.timestamp === 'number' ? wish.timestamp : nowEpoch,
     };
 
     const updated = [newWish, ...currentWishes];
     saveWishesEverywhere(updated);
 
     res.json({ success: true, wish: newWish, wishes: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5b. Delete Guest Wish Permanently (across data/ and src/config/)
+app.delete('/api/wishes/:id', (req, res) => {
+  try {
+    const wishId = decodeURIComponent(req.params.id);
+    const currentWishes = getSavedWishes();
+    const updated = currentWishes.filter((w) => w.id !== wishId);
+    saveWishesEverywhere(updated);
+    res.json({
+      success: true,
+      message: 'Ucapan berhasil dihapus secara permanen dari server & berkas kode sumber.',
+      wishes: updated,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/wishes/delete', (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) {
+      res.status(400).json({ success: false, error: 'ID ucapan wajib diberikan.' });
+      return;
+    }
+    const currentWishes = getSavedWishes();
+    const updated = currentWishes.filter((w) => w.id !== id);
+    saveWishesEverywhere(updated);
+    res.json({
+      success: true,
+      message: 'Ucapan berhasil dihapus secara permanen dari server & berkas kode sumber.',
+      wishes: updated,
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

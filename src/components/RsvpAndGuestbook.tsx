@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Send, CheckCircle2, XCircle, HelpCircle, Users, MessageSquareHeart, HeartHandshake } from 'lucide-react';
-import { GuestWish, validateRsvp, DEFAULT_WEDDING_WISHES, fetchServerWishes, postServerWish } from '../utils/wedding';
+import {
+  GuestWish,
+  validateRsvp,
+  DEFAULT_WEDDING_WISHES,
+  fetchServerWishes,
+  postServerWish,
+  formatWishRelativeTime,
+} from '../utils/wedding';
 
 interface RsvpAndGuestbookProps {
   guestNameDefault?: string;
@@ -15,6 +22,7 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
   guestNameDefault = '',
   onShowToast,
 }) => {
+  const [currentNow, setCurrentNow] = useState(() => Date.now());
   const [wishes, setWishes] = useState<GuestWish[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -26,6 +34,14 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
     }
     return DEFAULT_WISHES;
   });
+
+  // Live timer tick every 10 seconds to update relative timestamps (e.g. "Baru saja" to "5 menit yang lalu")
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentNow(Date.now());
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [name, setName] = useState(
     guestNameDefault && guestNameDefault !== 'Tamu Undangan' ? guestNameDefault : ''
@@ -83,13 +99,15 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
 
     setIsSubmitting(true);
 
+    const nowEpoch = Date.now();
     const newWish: GuestWish = {
-      id: `wish-${Date.now()}`,
+      id: `wish-${nowEpoch}`,
       name: name.trim(),
       relationship,
       attendance,
       message: message.trim(),
-      createdAt: 'Baru saja',
+      createdAt: new Date(nowEpoch).toISOString(),
+      timestamp: nowEpoch,
     };
 
     // Save locally immediately
@@ -287,7 +305,7 @@ export const RsvpAndGuestbook: React.FC<RsvpAndGuestbookProps> = ({
                         {item.name}
                       </h4>
                       <span className="text-[11px] text-[#7A8678]">
-                        {item.relationship} • {item.createdAt}
+                        {item.relationship} • {formatWishRelativeTime(item, currentNow)}
                       </span>
                     </div>
 

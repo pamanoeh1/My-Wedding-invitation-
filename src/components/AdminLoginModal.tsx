@@ -17,8 +17,8 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   savedUsername = 'admin',
   savedPassword = 'wedding2026',
 }) => {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('wedding2026');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,18 +59,6 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         <p className="text-xs text-[#667265] mt-1 mb-6">
           Kelola data mempelai, jadwal acara, rekening hadiah, dan daftar tamu undangan.
         </p>
-
-        {/* Credentials Reminder Box */}
-        <div className="p-3 mb-6 rounded-2xl bg-[#F8F5EE] border border-[#C8A97E]/30 text-left text-xs text-[#556054]">
-          <div className="flex items-center gap-1.5 font-semibold text-[#7D6B4E] mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Akun Default Admin:</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between font-mono text-[11px] bg-white p-2 rounded-xl border border-stone-200 mt-1">
-            <span>Username: <strong className="text-[#2D332D]">admin</strong></span>
-            <span>Password: <strong className="text-[#2D332D]">wedding2026</strong></span>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           {error && (

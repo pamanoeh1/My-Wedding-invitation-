@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import {
   WeddingConfig,
   saveWeddingConfig,
@@ -10,6 +11,10 @@ import {
   BankAccountItem,
   GalleryPhotoItem,
   ProtocolItem,
+  deleteServerWish,
+  fetchServerWishes,
+  extractFatherLastName,
+  formatFamilyAnnouncement,
 } from '../utils/wedding';
 import { MediaInput } from './MediaInput';
 import {
@@ -35,6 +40,11 @@ import {
   Link as LinkIcon,
   Music,
   QrCode,
+  MapPin,
+  FileSpreadsheet,
+  Upload,
+  Download,
+  AlertCircle,
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -115,7 +125,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onShowToast('Username & Password admin berhasil diperbarui!');
   };
 
-  const handleDeleteWish = (id: string) => {
+  // Sync wishes from server on mount
+  useEffect(() => {
+    fetchServerWishes().then((serverWishes) => {
+      if (serverWishes && Array.isArray(serverWishes)) {
+        setWishes(serverWishes);
+      }
+    });
+  }, []);
+
+  const handleDeleteWish = async (id: string) => {
     const updated = wishes.filter((w) => w.id !== id);
     setWishes(updated);
     try {
@@ -123,7 +142,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     } catch {
       // ignore
     }
-    onShowToast('Ucapan berhasil dihapus.');
+
+    const ok = await deleteServerWish(id);
+    if (ok) {
+      onShowToast('Ucapan berhasil dihapus permanen dari server & basis kode!');
+    } else {
+      onShowToast('Ucapan berhasil dihapus.');
+    }
   };
 
   // Toggle single feature
@@ -293,6 +318,178 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setCopiedLink(true);
     onShowToast('Link undangan khusus tamu berhasil disalin!');
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  // ==============================================================
+  // EXCEL TEMPLATE BULK GUEST GENERATOR (MAX 100 TAMU PER INPUT)
+  // ==============================================================
+  const [excelGuests, setExcelGuests] = useState<
+    Array<{ id: string; name: string; category?: string; note?: string }>
+  >([]);
+  const [excelRawText, setExcelRawText] = useState('');
+  const [excelWarning, setExcelWarning] = useState<string | null>(null);
+  const [copiedExcelIndex, setCopiedExcelIndex] = useState<number | null>(null);
+  const [copiedAllWhatsapp, setCopiedAllWhatsapp] = useState(false);
+
+  // 1. Download Excel template (.csv / .xlsx compatible)
+  const handleDownloadExcelTemplate = () => {
+    const csvContent =
+      'Nama Tamu,Kategori / Hubungan,Keterangan Tambahan\n' +
+      'Bpk. Ir. Suryanto & Keluarga,Keluarga Besar,Meja VIP 1\n' +
+      'dr. Amanda & Rekan,Sahabat Mempelai,Reguler\n' +
+      'Bpk. Prof. Hendra Santoso,Tamu Kehormatan,VIP\n' +
+      'Dimas Anggara & Istri,Teman Kuliah,Reguler\n' +
+      'Keluarga Bpk. Rahmat Hidayat,Tetangga / Kerabat,Reguler\n';
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Template_Daftar_Tamu_Undangan.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    onShowToast('Template Excel/CSV tamu berhasil diunduh!');
+  };
+
+  // 2. Parse uploaded Excel (.xlsx, .xls, .csv) file with 100 guests max cap
+  const handleExcelFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setExcelWarning(null);
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      try {
+        const data = evt.target?.result;
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (!rawJson || rawJson.length === 0) {
+          setExcelWarning('Berkas Excel kosong atau tidak terbaca.');
+          return;
+        }
+
+        let startIndex = 0;
+        const firstRow = rawJson[0] || [];
+        const isHeader = firstRow.some((col: any) =>
+          typeof col === 'string' &&
+          (col.toLowerCase().includes('nama') || col.toLowerCase().includes('tamu') || col.toLowerCase().includes('guest'))
+        );
+        if (isHeader) {
+          startIndex = 1;
+        }
+
+        const parsedList: Array<{ id: string; name: string; category?: string; note?: string }> = [];
+
+        for (let i = startIndex; i < rawJson.length; i++) {
+          const row = rawJson[i];
+          if (!row || !row[0]) continue;
+          const guestName = String(row[0]).trim();
+          if (!guestName || guestName.toLowerCase() === 'nama tamu') continue;
+
+          parsedList.push({
+            id: `guest_${Date.now()}_${i}`,
+            name: guestName,
+            category: row[1] ? String(row[1]).trim() : 'Tamu Undangan',
+            note: row[2] ? String(row[2]).trim() : '',
+          });
+        }
+
+        if (parsedList.length === 0) {
+          setExcelWarning('Tidak ada nama tamu yang valid ditemukan dalam berkas Excel.');
+          return;
+        }
+
+        // Exact requirement: maksimal 100 orang per input
+        let finalGuests = parsedList;
+        if (parsedList.length > 100) {
+          finalGuests = parsedList.slice(0, 100);
+          setExcelWarning(
+            `Perhatian: Maksimal 100 tamu per input. Menampilkan 100 tamu pertama dari total ${parsedList.length} tamu.`
+          );
+        } else {
+          onShowToast(`Berhasil memuat ${parsedList.length} tamu dari berkas Excel!`);
+        }
+
+        setExcelGuests(finalGuests);
+      } catch (err) {
+        console.error('Error parsing Excel:', err);
+        setExcelWarning('Gagal membaca berkas Excel. Pastikan format .xlsx, .xls, atau .csv valid.');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  // 3. Process pasted rows from Excel/Sheets (max 100)
+  const handleProcessExcelPaste = () => {
+    if (!excelRawText.trim()) {
+      setExcelWarning('Silakan tempel baris data dari Excel terlebih dahulu.');
+      return;
+    }
+
+    setExcelWarning(null);
+    const normalized = excelRawText.replace(/\\n/g, '\n');
+    const lines = normalized.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+    const parsedList: Array<{ id: string; name: string; category?: string; note?: string }> = [];
+
+    lines.forEach((line, idx) => {
+      const cols = line.includes('\t') ? line.split('\t') : line.includes(',') ? line.split(',') : [line];
+      const guestName = cols[0].trim().replace(/^["']|["']$/g, '');
+      if (!guestName || guestName.toLowerCase() === 'nama tamu') return;
+
+      parsedList.push({
+        id: `guest_paste_${Date.now()}_${idx}`,
+        name: guestName,
+        category: cols[1] ? cols[1].trim() : 'Tamu Undangan',
+        note: cols[2] ? cols[2].trim() : '',
+      });
+    });
+
+    if (parsedList.length === 0) {
+      setExcelWarning('Tidak ada baris nama tamu yang valid.');
+      return;
+    }
+
+    // Exact requirement: maksimal 100 orang per input
+    let finalGuests = parsedList;
+    if (parsedList.length > 100) {
+      finalGuests = parsedList.slice(0, 100);
+      setExcelWarning(
+        `Perhatian: Maksimal 100 tamu per input. Menampilkan 100 tamu pertama dari total ${parsedList.length} baris.`
+      );
+    } else {
+      onShowToast(`Berhasil memproses ${parsedList.length} tamu!`);
+    }
+
+    setExcelGuests(finalGuests);
+    setExcelRawText('');
+  };
+
+  // 4. Copy all generated WhatsApp links
+  const handleCopyAllWhatsapp = () => {
+    if (excelGuests.length === 0) return;
+    const coupleText = `${formData.couple.groom.name} & ${formData.couple.bride.name}`;
+    const formatted = excelGuests
+      .map(
+        (g, i) =>
+          `${i + 1}. Kepada Yth. *${g.name}*\n` +
+          `Undangan Pernikahan ${coupleText}:\n` +
+          `${baseUrl}?to=${encodeURIComponent(g.name)}\n`
+      )
+      .join('\n');
+
+    navigator.clipboard.writeText(formatted);
+    setCopiedAllWhatsapp(true);
+    onShowToast(`Berhasil menyalin link undangan untuk ${excelGuests.length} tamu (Format WhatsApp)!`);
+    setTimeout(() => setCopiedAllWhatsapp(false), 2500);
   };
 
   return (
@@ -1090,6 +1287,75 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Petunjuk Lokasi & Parkir */}
+            <div className="p-6 rounded-3xl bg-white shadow-md border border-[#C8A97E]/30 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                <div className="flex items-center gap-2 text-[#3F4E3E]">
+                  <MapPin className="w-5 h-5 text-[#C8A97E]" />
+                  <h3 className="font-serif font-bold text-lg text-[#2D332D]">
+                    Petunjuk Lokasi & Parkir
+                  </h3>
+                </div>
+                <span className="text-xs text-[#7A8678]">
+                  Ditampilkan di bawah jadwal rangkaian acara
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-semibold text-[#556054] uppercase tracking-wider">
+                  Informasi Akses Lokasi & Fasilitas Parkir
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.event.parkingNote || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      event: { ...prev.event, parkingNote: e.target.value },
+                    }))
+                  }
+                  placeholder="Contoh: Tersedia area parkir yang luas dan layanan valet gratis bagi para tamu. Mohon mematuhi arahan petugas di gerbang utama."
+                  className="w-full px-4 py-3 text-xs sm:text-sm rounded-xl border border-stone-300 bg-[#FBF9F5] focus:border-[#C8A97E] outline-none leading-relaxed"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7A8678]">
+                  <p>
+                    Catatan ini akan tampil otomatis di bagian bawah kartu acara di undangan.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          event: {
+                            ...prev.event,
+                            parkingNote:
+                              'Tersedia area parkir yang luas dan layanan valet. Mohon mematuhi petunjuk petugas keamanan di gerbang utama.',
+                          },
+                        }))
+                      }
+                      className="text-[#7D6B4E] hover:underline cursor-pointer"
+                    >
+                      Gunakan Format Bawaan
+                    </button>
+                    <span>&bull;</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          event: { ...prev.event, parkingNote: '' },
+                        }))
+                      }
+                      className="text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Sembunyikan / Kosongkan
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1893,6 +2159,194 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             </div>
 
+            {/* Bulk Guest Invitation Link Generator via Excel Template */}
+            <div className="p-6 rounded-3xl bg-white shadow-md border border-[#C8A97E]/30 space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-200">
+                <div className="flex items-center gap-2 text-[#3F4E3E]">
+                  <FileSpreadsheet className="w-5 h-5 text-[#C8A97E]" />
+                  <div>
+                    <h3 className="font-serif font-bold text-lg text-[#2D332D]">
+                      Generator Link Undangan Tamu Massal (Template Excel)
+                    </h3>
+                    <p className="text-xs text-[#556054]">
+                      Unggah berkas Excel atau tempel data nama tamu (Maksimal 100 orang per input).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#EAF0E8] text-[#3F4E3E] border border-[#3F4E3E]/20">
+                    Maks. 100 Tamu / Input
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleDownloadExcelTemplate}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F5ECE0] text-[#7D6B4E] hover:bg-[#C8A97E] hover:text-white text-xs font-semibold transition cursor-pointer shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Unduh Template Excel</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Section: File Upload & Paste */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Method 1: File Upload */}
+                <div className="p-4 rounded-2xl bg-[#FBF9F5] border border-dashed border-[#C8A97E]/60 flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center gap-2 font-semibold text-xs text-[#2D332D] mb-1">
+                      <Upload className="w-4 h-4 text-[#C8A97E]" />
+                      <span>Metode 1: Unggah Berkas Excel (.xlsx, .xls, .csv)</span>
+                    </div>
+                    <p className="text-[11px] text-[#7A8678] leading-relaxed">
+                      Kolom A: Nama Tamu, Kolom B: Kategori (opsional). Maksimal 100 tamu per unggahan.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-white border border-stone-300 hover:border-[#C8A97E] text-xs font-semibold text-[#3F4E3E] hover:bg-stone-50 transition cursor-pointer shadow-sm">
+                      <Upload className="w-4 h-4 text-[#C8A97E]" />
+                      <span>Pilih Berkas Excel / CSV</span>
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls, .csv"
+                        onChange={handleExcelFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Method 2: Direct Paste from Excel */}
+                <div className="p-4 rounded-2xl bg-[#FBF9F5] border border-stone-200 space-y-3">
+                  <div className="flex items-center gap-2 font-semibold text-xs text-[#2D332D]">
+                    <Copy className="w-4 h-4 text-[#C8A97E]" />
+                    <span>Metode 2: Tempel Langsung Baris Nama dari Excel</span>
+                  </div>
+
+                  <textarea
+                    rows={2}
+                    value={excelRawText}
+                    onChange={(e) => setExcelRawText(e.target.value)}
+                    placeholder="Contoh:&#10;Bpk. Hendra Wijaya&#10;dr. Amanda & Rekan&#10;Keluarga Bpk. Santoso"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 bg-white outline-none focus:border-[#C8A97E]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleProcessExcelPaste}
+                    className="w-full py-2 px-4 rounded-xl bg-[#3F4E3E] text-white hover:bg-[#344033] text-xs font-semibold transition cursor-pointer shadow-sm"
+                  >
+                    Proses Baris Nama (Maks. 100 Tamu)
+                  </button>
+                </div>
+              </div>
+
+              {/* Warning Banner */}
+              {excelWarning && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>{excelWarning}</span>
+                </div>
+              )}
+
+              {/* Results List */}
+              {excelGuests.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-stone-200">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-xs text-[#2D332D]">
+                        Daftar Link Undangan Tergenerate:
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF0E8] text-[#3F4E3E]">
+                        {excelGuests.length} Tamu
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyAllWhatsapp}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#3F4E3E] text-white hover:bg-[#344033] text-xs font-semibold shadow-sm cursor-pointer"
+                      >
+                        {copiedAllWhatsapp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#C8A97E]" />}
+                        <span>{copiedAllWhatsapp ? 'Semua Tersalin!' : 'Salin Semua (Format WA)'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExcelGuests([]);
+                          setExcelWarning(null);
+                        }}
+                        className="px-3 py-1.5 rounded-full border border-stone-300 text-xs font-semibold text-stone-600 hover:bg-stone-100 transition cursor-pointer"
+                      >
+                        Bersihkan
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                    {excelGuests.map((guest, idx) => {
+                      const guestUrl = `${baseUrl}?to=${encodeURIComponent(guest.name)}`;
+                      const isCopied = copiedExcelIndex === idx;
+
+                      return (
+                        <div
+                          key={guest.id}
+                          className="p-3 rounded-xl bg-[#F8F5EE] border border-stone-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-white border border-stone-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                {idx + 1}
+                              </span>
+                              <strong className="text-xs text-[#2D332D] truncate">
+                                {guest.name}
+                              </strong>
+                              {guest.category && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] bg-white border border-stone-200 text-stone-600 shrink-0">
+                                  {guest.category}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] font-mono text-stone-500 truncate pl-7 mt-0.5">
+                              {guestUrl}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 pl-7 sm:pl-0 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(guestUrl);
+                                setCopiedExcelIndex(idx);
+                                setTimeout(() => setCopiedExcelIndex(null), 1800);
+                              }}
+                              className="px-3 py-1 rounded-lg bg-white border border-stone-300 hover:border-[#C8A97E] text-[11px] font-semibold text-[#3F4E3E] cursor-pointer flex items-center gap-1"
+                            >
+                              {isCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-[#C8A97E]" />}
+                              <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
+                            </button>
+
+                            <a
+                              href={guestUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 text-stone-400 hover:text-[#3F4E3E] transition"
+                              title="Buka Undangan Tamu Ini"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Live RSVP Feed & Moderation */}
             <div className="p-6 rounded-3xl bg-white shadow-md border border-[#C8A97E]/30 space-y-4">
               <div className="flex items-center justify-between">
@@ -1900,7 +2354,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <h3 className="font-serif font-bold text-lg text-[#2D332D]">
                     Daftar Konfirmasi Kehadiran & Ucapan ({wishes.length})
                   </h3>
-                  <p className="text-xs text-[#7A8678]">Data tersimpan secara aman di peramban ini</p>
+                  <p className="text-xs text-[#7A8678]">Data tersimpan permanen di server & basis kode</p>
                 </div>
               </div>
 

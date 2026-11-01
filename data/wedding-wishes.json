@@ -1,42 +1,38 @@
 [
   {
-    "id": "wish-1793466319889",
-    "name": "dr. Amanda & Rekan",
-    "relationship": "Rekan Kerja",
-    "attendance": "hadir",
-    "message": "Selamat berbahagia Arya dan Nabila! Semoga selalu diberkahi kebahagiaan.",
-    "createdAt": "Baru saja"
-  },
-  {
     "id": "wish-1",
     "name": "Keluarga Besar Bpk. Prof. Susanto",
     "relationship": "Keluarga",
     "attendance": "hadir",
-    "message": "Barakallahu lakuma wa baraka alaikuma wa jama'a bainakuma fii khoir. Selamat menempuh hidup baru untuk ananda Arya dan Nabila. Semoga senantiasa sakinah, mawaddah, warahmah.",
-    "createdAt": "Baru saja"
+    "message": "Barakallahu lakuma wa baraka alaikuma wa jama'a bainakuma fii khoir. Selamat menempuh hidup baru untuk ananda berdua. Semoga senantiasa sakinah, mawaddah, warahmah.",
+    "createdAt": "2026-11-01T07:05:00.000Z",
+    "timestamp": 1793516700000
   },
   {
     "id": "wish-2",
     "name": "Dimas Anggara, S.Kom & Istri",
     "relationship": "Sahabat",
     "attendance": "hadir",
-    "message": "Happy Wedding sahabat perjuangan Arya! Akhirnya berlabuh ke pelaminan bersama dokter Nabila yang anggun. Doa terbaik untuk kalian berdua, lancar sampai hari H!",
-    "createdAt": "2 jam yang lalu"
+    "message": "Happy Wedding sahabat perjuangan! Akhirnya berlabuh ke pelaminan. Doa terbaik untuk kalian berdua, langgeng sampai hari H!",
+    "createdAt": "2026-11-01T05:15:00.000Z",
+    "timestamp": 1793510100000
   },
   {
     "id": "wish-3",
     "name": "dr. Farah Maulida & Rekan Residen",
     "relationship": "Rekan Kerja",
     "attendance": "hadir",
-    "message": "Selamat ya Nabila cantik! Senang banget melihat kalian berdua bersatu. Semoga menjadi keluarga penuh berkah dan saling melengkapi seumur hidup.",
-    "createdAt": "5 jam yang lalu"
+    "message": "Selamat ya mempelai cantik & tampan! Senang banget melihat kalian berdua bersatu. Semoga menjadi keluarga penuh berkah dan saling melengkapi seumur hidup.",
+    "createdAt": "2026-11-01T02:15:00.000Z",
+    "timestamp": 1793499300000
   },
   {
     "id": "wish-4",
     "name": "Ahmad Fauzi & Keluarga",
     "relationship": "Teman Kuliah",
     "attendance": "ragu",
-    "message": "Selamat Arya dan Nabila! Mohon maaf bila belum pasti bisa hadir karena bertepatan dengan dinas ke luar kota, namun doa tulus kami selalu menyertai kalian.",
-    "createdAt": "1 hari yang lalu"
+    "message": "Selamat menempuh hidup baru! Mohon maaf bila belum pasti bisa hadir karena bertepatan dengan dinas ke luar kota, namun doa tulus kami selalu menyertai kalian.",
+    "createdAt": "2026-10-31T07:15:00.000Z",
+    "timestamp": 1793430900000
   }
 ]

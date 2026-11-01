@@ -30,6 +30,7 @@ export interface GuestWish {
   attendance: 'hadir' | 'tidak_hadir' | 'ragu';
   message: string;
   createdAt: string;
+  timestamp?: number;
 }
 
 export interface BankAccountItem {
@@ -339,6 +340,136 @@ export async function postServerWish(wish: Partial<GuestWish>): Promise<GuestWis
     // fallback
   }
   return null;
+}
+
+/**
+ * Permanently deletes a wish from the server across files
+ */
+export async function deleteServerWish(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/wishes/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return Boolean(data && data.success);
+    }
+  } catch (err) {
+    console.error('Error deleting server wish:', err);
+  }
+  return false;
+}
+
+/**
+ * Extracts the father's family/last name from his full formal title/name.
+ * Example: 'Bpk. Ir. H. Bambang Wijaya' -> 'Wijaya'
+ * Example: 'Bpk. Prof. Dr. Hendra Gunawan' -> 'Gunawan'
+ */
+export function extractFatherLastName(fullName: string, fallback = ''): string {
+  if (!fullName || typeof fullName !== 'string') return fallback;
+  // Strip out titles like Bpk, Bapak, Ibu, Ir, Dr, Prof, H, Hj, Drs, S.T., M.M., etc.
+  const withoutTitles = fullName
+    .replace(/\b(Bpk\.?|Bapak\.?|Ibu\.?|Ir\.?|Dr\.?|Drs\.?|Dra\.?|Prof\.?|H\.?|Hj\.?|S\.T\.?|S\.E\.?|S\.Kom\.?|M\.M\.?|M\.Si\.?|M\.T\.?|Ph\.D\.?)\b/gi, '')
+    .trim();
+  
+  const words = withoutTitles.split(/\s+/).filter(Boolean);
+  if (words.length > 0) {
+    const lastWord = words[words.length - 1].replace(/^[,\.\s]+|[,\.\s]+$/g, '');
+    if (lastWord.length > 0) return lastWord;
+  }
+  return fallback;
+}
+
+/**
+ * Formats family announcement text dynamically based on father names.
+ * 'Beserta segenap Keluarga Besar {groomFamily} & {brideFamily}'
+ */
+export function formatFamilyAnnouncement(
+  groomFather: string,
+  brideFather: string,
+  fallback = 'Wijaya & Gunawan'
+): string {
+  const groomFamily = extractFatherLastName(groomFather, 'Wijaya');
+  const brideFamily = extractFatherLastName(brideFather, 'Gunawan');
+
+  if (groomFamily && brideFamily) {
+    return `Beserta segenap Keluarga Besar ${groomFamily} & ${brideFamily}`;
+  } else if (groomFamily || brideFamily) {
+    return `Beserta segenap Keluarga Besar ${groomFamily || brideFamily}`;
+  }
+  return `Beserta segenap Keluarga Besar ${fallback}`;
+}
+
+/**
+ * Formats relative time for guest wishes in real-time.
+ * Rule: "Baru saja akan hilang kalau sudah 5 menit lebih"
+ * - Under 5 minutes: 'Baru saja'
+ * - 5 to 59 minutes: '{mins} menit yang lalu'
+ * - 1 to 23 hours: '{hours} jam yang lalu'
+ * - 1 to 6 days: '{days} hari yang lalu'
+ * - 7+ days: Indonesian date format
+ */
+export function formatWishRelativeTime(wish: GuestWish, nowMs: number = Date.now()): string {
+  let wishEpoch: number | null = null;
+
+  if (typeof wish.timestamp === 'number' && !isNaN(wish.timestamp) && wish.timestamp > 0) {
+    wishEpoch = wish.timestamp;
+  } else if (wish.createdAt && wish.createdAt !== 'Baru saja') {
+    const parsed = Date.parse(wish.createdAt);
+    if (!isNaN(parsed)) {
+      wishEpoch = parsed;
+    } else {
+      // Check if createdAt has strings like "2 jam yang lalu", "1 hari yang lalu"
+      const matchMin = wish.createdAt.match(/(\d+)\s+menit\s+yang\s+lalu/i);
+      if (matchMin) {
+        wishEpoch = nowMs - parseInt(matchMin[1], 10) * 60 * 1000;
+      }
+      const matchHour = wish.createdAt.match(/(\d+)\s+jam\s+yang\s+lalu/i);
+      if (matchHour) {
+        wishEpoch = nowMs - parseInt(matchHour[1], 10) * 60 * 60 * 1000;
+      }
+      const matchDay = wish.createdAt.match(/(\d+)\s+hari\s+yang\s+lalu/i);
+      if (matchDay) {
+        wishEpoch = nowMs - parseInt(matchDay[1], 10) * 24 * 60 * 60 * 1000;
+      }
+    }
+  }
+
+  // If no date could be parsed and it was marked as 'Baru saja'
+  if (!wishEpoch) {
+    if (wish.createdAt === 'Baru saja') {
+      return 'Baru saja';
+    }
+    return wish.createdAt || 'Baru saja';
+  }
+
+  const diffMs = Math.max(0, nowMs - wishEpoch);
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  // Exact rule: "Baru saja akan hilang kalau sudah 5 menit lebih"
+  if (diffMinutes < 5) {
+    return 'Baru saja';
+  }
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} menit yang lalu`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours} jam yang lalu`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) {
+    return `${diffDays} hari yang lalu`;
+  }
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(wishEpoch));
 }
 
 /**

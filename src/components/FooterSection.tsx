@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
 import { Heart, FileCode, Download, Check, Sparkles } from 'lucide-react';
 
+import { formatFamilyAnnouncement, extractFatherLastName, WeddingConfig } from '../utils/wedding';
+
 interface FooterSectionProps {
   onShowToast: (msg: string) => void;
   showDownload?: boolean;
   onOpenSecretAdmin?: () => void;
+  groomName?: string;
+  brideName?: string;
+  groomFather?: string;
+  brideFather?: string;
+  config?: WeddingConfig;
 }
 
 export const FooterSection: React.FC<FooterSectionProps> = ({
   onShowToast,
   showDownload = true,
   onOpenSecretAdmin,
+  groomName = 'Arya',
+  brideName = 'Nabila',
+  groomFather = 'Bpk. Ir. H. Bambang Wijaya',
+  brideFather = 'Bpk. Prof. Dr. Hendra Gunawan',
+  config,
 }) => {
   const [downloadingZip, setDownloadingZip] = useState(false);
   const [downloadingHtml, setDownloadingHtml] = useState(false);
   const [showHostingGuide, setShowHostingGuide] = useState(false);
+
+  const coupleDisplayName = groomName && brideName ? `${groomName} & ${brideName}` : 'Arya & Nabila';
+  const familyAnnouncement = formatFamilyAnnouncement(groomFather, brideFather);
 
   const handleDownloadZip = () => {
     setDownloadingZip(true);
@@ -29,17 +44,44 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
     setTimeout(() => setDownloadingZip(false), 1500);
   };
 
-  const handleDownloadStandalone = () => {
+  const handleDownloadStandalone = async () => {
     setDownloadingHtml(true);
-    const link = document.createElement('a');
-    link.href = '/wedding-invitation-standalone.html';
-    link.download = 'undangan-pernikahan-digital.html';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Fetch the standalone HTML template and replace with current dynamic configuration
+      const res = await fetch('/wedding-invitation-standalone.html');
+      let htmlContent = await res.text();
 
-    onShowToast('Berkas Standalone HTML berhasil diunduh!');
-    setTimeout(() => setDownloadingHtml(false), 1500);
+      const groomFamily = extractFatherLastName(groomFather, 'Wijaya');
+      const brideFamily = extractFatherLastName(brideFather, 'Gunawan');
+
+      htmlContent = htmlContent
+        .replace(/The Wedding of .*? — Undangan Pernikahan Digital/g, `The Wedding of ${coupleDisplayName} — Undangan Pernikahan Digital`)
+        .replace(/<h3 class="text-2xl font-serif font-bold text-white">.*?<\/h3>/g, `<h3 class="text-2xl font-serif font-bold text-white">${coupleDisplayName}</h3>`)
+        .replace(/<p class="text-xs text-stone-400 mt-1">Keluarga Besar.*?<\/p>/g, `<p class="text-xs text-stone-400 mt-1">${familyAnnouncement}</p>`);
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `undangan-${groomName.toLowerCase()}-${brideName.toLowerCase()}-standalone.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onShowToast(`Berkas Standalone HTML (${coupleDisplayName}) berhasil diunduh!`);
+    } catch {
+      // Fallback to static direct file if fetch fails
+      const link = document.createElement('a');
+      link.href = '/wedding-invitation-standalone.html';
+      link.download = 'undangan-pernikahan-digital.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      onShowToast('Berkas Standalone HTML berhasil diunduh!');
+    } finally {
+      setTimeout(() => setDownloadingHtml(false), 1500);
+    }
   };
 
   return (
@@ -61,10 +103,10 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
             Kami yang berbahagia,
           </p>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-wide">
-            Arya & Nabila
+            {coupleDisplayName}
           </h2>
           <p className="text-xs text-stone-400 mt-2">
-            Beserta segenap Keluarga Besar Wijaya & Gunawan
+            {familyAnnouncement}
           </p>
         </div>
 
@@ -222,7 +264,7 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
         <div className="pt-10 border-t border-white/10 text-[11px] text-stone-400 flex flex-col sm:flex-row items-center justify-center gap-2">
           <span>Digital Wedding Invitation &bull; Crafted with</span>
           <Heart className="w-3.5 h-3.5 text-[#C8A97E] fill-[#C8A97E] inline" />
-          <span>&bull; Arya & Nabila Wedding</span>
+          <span>&bull; {coupleDisplayName} Wedding</span>
         </div>
       </div>
     </footer>
