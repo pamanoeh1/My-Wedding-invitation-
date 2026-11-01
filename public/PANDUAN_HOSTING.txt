@@ -4,11 +4,29 @@ PANDUAN LENGKAP UPLOAD WEBSITE UNDANGAN PERNIKAHAN KE WEB HOSTING
 
 Website undangan pernikahan digital ini adalah berkas Static Web (HTML, CSS, JS)
 yang 100% mandiri, responsif, cepat, dan siap diunggah ke semua jenis hosting
-(cPanel, Hostinger, Niagahoster, DomaiNesia, Rumahweb, IDwebhost, Netlify, Vercel,
-GitHub Pages, dll).
+(Cloudflare Pages / Workers, cPanel, Hostinger, Niagahoster, DomaiNesia, Rumahweb,
+IDwebhost, Netlify, Vercel, GitHub Pages, dll).
 
 --------------------------------------------------------------------------------
-OPSI 1: UPLOAD KE CPANEL / SHARED HOSTING (Paling Umum)
+OPSI 1: UPLOAD KE CLOUDFLARE (Pages / Workers) - GRATIS & SANGAT CEPAT
+--------------------------------------------------------------------------------
+Metode A: Melalui Dashboard Cloudflare Pages (Drag & Drop):
+1. Buka dashboard Cloudflare (dash.cloudflare.com) > "Workers & Pages".
+2. Klik "Create Application" > tab "Pages" > "Upload assets".
+3. Beri nama proyek Anda (misal: "my-wedding-invitation").
+4. Ekstrak file "undangan-pernikahan-hosting.zip" di komputer Anda.
+5. Drag & drop folder hasil ekstrak tersebut ke layar Cloudflare.
+6. Klik "Deploy site". Website langsung online di domain *.pages.dev!
+
+Metode B: Melalui Wrangler CLI:
+1. Pastikan folder output adalah ./dist (telah menyertakan wrangler.toml).
+2. Jalankan: `npx wrangler deploy`
+3. Cloudflare akan membaca konfigurasi:
+   not_found_handling = "single-page-application"
+   tanpa aturan _redirects yang menyebabkan infinite loop (Error 100324 telah teratasi).
+
+--------------------------------------------------------------------------------
+OPSI 2: UPLOAD KE CPANEL / SHARED HOSTING (Paling Umum)
 --------------------------------------------------------------------------------
 1. Masuk ke cPanel akun hosting Anda (misal: domainanda.com/cpanel).
 2. Buka menu "File Manager".
@@ -23,7 +41,7 @@ OPSI 1: UPLOAD KE CPANEL / SHARED HOSTING (Paling Umum)
 
 
 --------------------------------------------------------------------------------
-OPSI 2: UPLOAD KE HOSTINGER (hPanel)
+OPSI 3: UPLOAD KE HOSTINGER (hPanel)
 --------------------------------------------------------------------------------
 1. Masuk ke dashboard Hostinger -> Web Hosting -> Kelola.
 2. Buka menu "File Manager".
@@ -34,9 +52,8 @@ OPSI 2: UPLOAD KE HOSTINGER (hPanel)
 
 
 --------------------------------------------------------------------------------
-OPSI 3: UPLOAD KE HOSTING GRATIS (Netlify / Vercel)
+OPSI 4: UPLOAD KE HOSTING GRATIS (Netlify / Vercel)
 --------------------------------------------------------------------------------
-Cara termudah tanpa sewa server:
 1. Buka https://app.netlify.com/drop
 2. Drag & drop folder hasil ekstrak zip ini ke layar browser Netlify.
 3. Dalam 5 detik, website langsung online dengan link HTTPS gratis!
@@ -63,7 +80,7 @@ CARA PENGGUNAAN FITUR:
    (Username & password dapat diubah langsung dari dalam panel edit).
 
 3. BERKAS STANDALONE HTML (SINGLE-FILE):
-   File "undangan-pernikahan-digital.html" adalah versi 1 berkas tunggal terpadu
+   File "wedding-invitation-standalone.html" adalah versi 1 berkas tunggal terpadu
    yang dapat dibuka langsung di laptop/HP tanpa internet sekalipun.
 
 Semoga acara pernikahan berjalan lancar, berkah, dan penuh kebahagiaan!
